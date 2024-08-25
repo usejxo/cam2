@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Show Camera Feed</title>
+</head>
+<body>
+    <h1>Show Camera Feed Page</h1>
+    <video id="remoteVideo" autoplay playsinline></video>
+    <script>
+        const peerConnection = new RTCPeerConnection();
+
+        // Replace with your signaling server URL
+        const signalingServerUrl = 'wss://electric-jelene-jxo-beta-api-8cdbeb85.koyeb.app/';
+        const socket = new WebSocket(signalingServerUrl);
+
+        socket.onmessage = (message) => {
+            const data = JSON.parse(message.data);
+            if (data.offer) {
+                peerConnection.setRemoteDescription(new RTCSessionDescription(data.offer));
+                peerConnection.createAnswer().then(answer => {
+                    peerConnection.setLocalDescription(answer);
+                    socket.send(JSON.stringify({ answer }));
+                });
+            }
+        };
+
+        peerConnection.ontrack = (event) => {
+            document.getElementById('remoteVideo').srcObject = event.streams[0];
+        };
+    </script>
+</body>
+</html>
